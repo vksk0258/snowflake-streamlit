@@ -8,12 +8,14 @@ from pandasai.llm.openai import OpenAI as ai
 from dotenv import load_dotenv
 import os
 
+
 load_dotenv()
+#secrets.toml 파일로 api키 호출
 llm = ai(api_token=st.secrets.OPENAI_API_KEY)
+client = OpenAI(api_key=st.secrets.OPENAI_API_KEY)
 st.title("☃️ Frosty")
 
-# Initialize the chat messages history
-client = OpenAI(api_key=st.secrets.OPENAI_API_KEY)
+# 채팅 메시지 기록 초기화
 if "messages" not in st.session_state:
     # system prompt includes table information, rules, and prompts the LLM to produce
     # a welcome message to the user.
