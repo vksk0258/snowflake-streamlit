@@ -32,8 +32,8 @@ with col12:
     filtered_df = filtered_df_city[filtered_df_city['ENTITY_NAME'] == entity_name].sort_values(by=['YEAR'], axis=0)
     
 with col13:
-    year_name = st.selectbox('연도 선택', filtered_df['YEAR'])
-    filtered_year_df = filtered_df[filtered_df['YEAR'] == year_name].sort_values(by=['YEAR'], axis=0)
+    year_name = st.selectbox('연도 선택', filtered_df_city['YEAR'])
+    filtered_year_df = filtered_df_city[filtered_df_city['YEAR'] == year_name].sort_values(by=['YEAR'], axis=0)
 
 col21, col22 = st.columns([0.6, 0.4])
 
@@ -55,11 +55,25 @@ timeline_chart = alt.Chart(
             )
     ).encode( # https://altair-viz.github.io/user_guide/encodings/index.html#encoding-data-types
         x=alt.X('YEAR', title='', axis=alt.Axis(tickCount=20)),
-        y=alt.Y('VALUE', title='구매 건 수')
+        y=alt.Y('VALUE', title='총 자산')
     ).properties(
         height=300
     ).interactive()
 col21.altair_chart(timeline_chart, use_container_width=True)
 
+color_scale = alt.Scale(scheme='greens', reverse=True)
+pie_chart = (
+    alt.Chart(filtered_year_df)
+    .mark_arc()
+    .encode(
+        theta=alt.Theta('VALUE'),
+        color=alt.Color('ENTITY_NAME', scale=color_scale, sort=["VALUE"])
+    )
+).properties(
+    width=300,
+    height=300,
+    title= str(year_name)+"년도 "+city_name +"의 은행 자산 비율"
+)
+col22.altair_chart(pie_chart, use_container_width=True)
 
 
