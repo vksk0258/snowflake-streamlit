@@ -62,18 +62,65 @@ timeline_chart = alt.Chart(
 col21.altair_chart(timeline_chart, use_container_width=True)
 
 color_scale = alt.Scale(scheme='greens', reverse=True)
-pie_chart = (
-    alt.Chart(filtered_year_df)
-    .mark_arc()
-    .encode(
-        theta=alt.Theta('VALUE'),
-        color=alt.Color('ENTITY_NAME', scale=color_scale, sort=["VALUE"])
-    )
+# pie_chart = (
+#     alt.Chart(filtered_year_df)
+#     .mark_arc()
+#     .encode(
+#         theta=alt.Theta('VALUE'),
+#         color=alt.Color('ENTITY_NAME', scale=color_scale, sort=["VALUE"])
+#     )
+# ).properties(
+#     width=300,
+#     height=300,
+#     title= str(year_name)+"년도 "+city_name +"의 은행 자산 비율"
+# )
+
+# col22.altair_chart(pie_chart, use_container_width=True)
+
+
+# 기존 파이 차트 생성 코드
+# color_scale = alt.Scale(scheme='greens', reverse=True)
+# pie_chart = alt.Chart(filtered_year_df).mark_arc().encode(
+#     theta=alt.Theta('VALUE:Q'),
+#     color=alt.Color('ENTITY_NAME:N', scale=color_scale, sort=["VALUE"])
+# ).properties(
+#     width=300,
+#     height=300,
+#     title=str(year_name)+"년도 "+city_name+"의 은행 자산 비율"
+# )
+
+# # 텍스트 레이어 추가
+# text = pie_chart.mark_text(radiusOffset=10, align='center', baseline='middle').encode(
+#     text=alt.Text('VALUE:Q'),  # 여기서 'Q'는 양적 데이터를 의미
+#     theta=alt.Theta('VALUE:Q')
+# )
+
+# # 파이 차트와 텍스트 레이어 결합
+# final_chart = pie_chart + text
+
+# # 스트림릿에 차트 표시 (스트림릿을 사용하는 경우)
+
+pie_chart = alt.Chart(filtered_year_df).mark_arc(innerRadius=0, outerRadius=100).encode(
+    theta=alt.Theta(field='VALUE', type='quantitative', stack=True),  # 각도를 값으로 설정
+    color=alt.Color('ENTITY_NAME:N', scale=color_scale, sort=["VALUE"]),
 ).properties(
     width=300,
     height=300,
-    title= str(year_name)+"년도 "+city_name +"의 은행 자산 비율"
+    title=str(year_name)+"년도 "+city_name+"의 은행 자산 비율"
 )
-col22.altair_chart(pie_chart, use_container_width=True)
 
+# 텍스트 레이어 추가 - 각 파이 조각 위에 값 표시
+text_layer = pie_chart.mark_text(radius=80,  # 텍스트 위치 조정 (원의 중심에서 50% 더 떨어진 위치)
+                                 align='center',
+                                 baseline='middle',
+                                 angle=0,
+                                 color='white').encode(
+    text='VALUE:Q',  # 표시할 텍스트 (값)
+    color=alt.value('blue'),
+    theta=alt.Theta(field='VALUE', type='quantitative', stack=True)  # 텍스트의 각도 조정
+)
+
+# 파이 차트와 텍스트 레이어 결합
+final_chart = pie_chart + text_layer
+col22.altair_chart(final_chart, use_container_width=True)
 
