@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
+import plotly.express as px
 
 st.set_page_config(page_title = "GA Dashboard", 
     page_icon = "🎲", 
@@ -18,7 +19,8 @@ table = QUALIFIED_TABLE_NAME.split(".")
 df = conn.query(f"SELECT * FROM {QUALIFIED_TABLE_NAME}")
 
 df_total = df[df['VARIABLE_NAME'].str.contains('Total Assets')]
-df_Insured = df[df['VARIABLE_NAME'].str.contains('Total deposits')]
+df_deposits = df[df['VARIABLE_NAME'].str.contains('Total deposits')]
+df_loan = df[df['VARIABLE_NAME'].str.contains('Loans')]
 
 
 ### 사이드바 ###
@@ -26,8 +28,9 @@ state_name_options = np.sort(df_total['STATE_ABBREVIATION'].unique())
 state_name = st.sidebar.selectbox('SELECT STATE CODE', state_name_options)
 filtered_df_state = df_total[df_total['STATE_ABBREVIATION'] == state_name]
 
-state_name_options_Insured = np.sort(df_Insured['STATE_ABBREVIATION'].unique())
-filtered_df_state_Insured = df_Insured[df_Insured['STATE_ABBREVIATION'] == state_name]
+state_name_options_Insured = np.sort(df_deposits['STATE_ABBREVIATION'].unique())
+filtered_df_state_Insured = df_deposits[df_deposits['STATE_ABBREVIATION'] == state_name]
+#####
 
 city_name_options = np.sort(filtered_df_state['CITY'].unique())
 city_name = st.sidebar.selectbox('SELECT CITY', city_name_options)
@@ -36,33 +39,64 @@ filtered_df_city = filtered_df_state[filtered_df_state['CITY'] == city_name]
 city_name_options_Insured = np.sort(filtered_df_state_Insured['CITY'].unique())
 filtered_df_city_Insured = filtered_df_state_Insured[filtered_df_state_Insured['CITY'] == city_name]
 
+#####
+
 entity_name_options = np.sort(filtered_df_city['ENTITY_NAME'].unique())
 entity_name = st.sidebar.selectbox('SELECT BANK', entity_name_options)
 filtered_df = filtered_df_city[filtered_df_city['ENTITY_NAME'] == entity_name]
 
 entity_name_options_Insured = np.sort(filtered_df_city_Insured['ENTITY_NAME'].unique())
-filtered_df_Insured = filtered_df_city_Insured[filtered_df_city_Insured['ENTITY_NAME'] == entity_name]
+filtered_df_deposits = filtered_df_city_Insured[filtered_df_city_Insured['ENTITY_NAME'] == entity_name]
 
-year_options = np.sort(filtered_df_city['YEAR'].unique())
+####
+
+year_options = np.sort(filtered_df['YEAR'].unique())
 year_name = st.sidebar.selectbox('SELECT YEAR', year_options)
-filtered_year_df = filtered_df_city[filtered_df_city['YEAR'] == year_name]
+filtered_year_df = filtered_df[filtered_df['YEAR'] == year_name]
 
 year_options_Insured = np.sort(filtered_df_city_Insured['YEAR'].unique())
-filtered_year_df_Insured = filtered_df_city_Insured[filtered_df_city_Insured['YEAR'] == year_name]
+filtered_year_df_deposits = filtered_df_city_Insured[filtered_df_city_Insured['YEAR'] == year_name]
 
+####
 
+pre_filtered_year_df = filtered_df_city[filtered_df_city['YEAR'] == year_name-1]
+pre_filtered_year_df_deposits = filtered_df_city_Insured[filtered_df_city_Insured['YEAR'] == year_name-1]
 
 def calculate_percentage_change(current_value, previous_value):
     if previous_value == 0:
         return "최초년도 입니다"
     percentage_change = ((current_value - previous_value) / previous_value) * 100
-    return f"작년대비  {percentage_change:.2f}%"
+    return f"{percentage_change:.2f}%"
 
-col11, col12, col13, col14 = st.columns(4)
+col11, col12, col13 = st.columns(3)
+
+#total asset 전년대 대비 비교
+current_value = int(df_total.loc[(df_total['STATE_ABBREVIATION'] == state_name) & (df_total['CITY'] == city_name) & (df_total['YEAR'] == year_name) &(df_total['ENTITY_NAME']==entity_name), 'VALUE'])
+try:
+    previous_value = int(df_total.loc[(df_total['STATE_ABBREVIATION'] == state_name) & (df_total['CITY'] == city_name) & (df_total['YEAR'] == year_name-1) &(df_total['ENTITY_NAME']==entity_name), 'VALUE'])
+except:
+    previous_value = 0
+
+col11.metric("총 자산(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}') 
 
 
-col11.metric("총 자산", f'$ {123}', f'{calculate_percentage_change(3, 4)}') 
+#deposit 전년도 대비 비교
+current_value = int(filtered_year_df_deposits[filtered_year_df_deposits['ENTITY_NAME']==entity_name]['VALUE'].iloc[0])
+try:
+    previous_value = int(pre_filtered_year_df_deposits[pre_filtered_year_df_deposits['ENTITY_NAME']==entity_name]['VALUE'].iloc[0])
+except:
+    previous_value = 0
 
+col12.metric("총 예금(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}') 
+
+current_value = int(df_loan.loc[(df_loan['STATE_ABBREVIATION'] == state_name) & (df_loan['CITY'] == city_name) & (df_loan['YEAR'] == year_name) &(df_loan['ENTITY_NAME']==entity_name), 'VALUE'])
+
+try:
+    previous_value = int(df_loan.loc[(df_loan['STATE_ABBREVIATION'] == state_name) & (df_loan['CITY'] == city_name) & (df_loan['YEAR'] == year_name-1) &(df_loan['ENTITY_NAME']==entity_name), 'VALUE'])
+except:
+    previous_value = 0
+
+col13.metric("총 대출금(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}') 
 
 st.divider()
 
@@ -91,13 +125,13 @@ timeline_chart = alt.Chart(
         height=300,
         title= entity_name+" Annual Total Asset Graph"
     ).interactive()
-col21.subheader(entity_name+"은행 연도별 총 자산 추이", divider='green')
+col21.subheader(entity_name+" 연도별 총 자산 추이", divider='green')
 col21.altair_chart(timeline_chart, use_container_width=True)
 
 
 color_scale = alt.Scale(scheme='greens', reverse=True)
 pie_chart = (
-    alt.Chart(filtered_year_df)
+    alt.Chart(df_total[(df_total['STATE_ABBREVIATION'] == state_name) & (df_total['CITY'] == city_name) & (df_total['YEAR'] == year_name)])
     .mark_arc()
     .encode(
         theta=alt.Theta('VALUE'),
@@ -156,11 +190,11 @@ col22.altair_chart(pie_chart, use_container_width=True)
 # final_chart = pie_chart + text_layer
 # col22.altair_chart(final_chart, use_container_width=True)
 
-col31, col32 = st.columns([0.6, 0.4])
+col31, col32 = st.columns([0.4, 0.6])
 
 color_scale = alt.Scale(scheme='greens')
 chart_top10 = (
-    alt.Chart(filtered_year_df_Insured.sort_values(by='VALUE', ascending=False).head(5))
+    alt.Chart(filtered_year_df_deposits.sort_values(by='VALUE', ascending=False).head(5))
     .mark_bar()
     .encode(
         x=alt.X("VALUE", title="Deposit"),
@@ -170,5 +204,6 @@ chart_top10 = (
     .properties(height=240)
 )
 
-col32.subheader(city_name+" 예금 자산 순위", divider='green')
-col32.altair_chart(chart_top10, theme="streamlit", use_container_width=True)
+col31.subheader(city_name+" 예금 자산 순위", divider='green')
+col31.altair_chart(chart_top10, theme="streamlit", use_container_width=True)
+
