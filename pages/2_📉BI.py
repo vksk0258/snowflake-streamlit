@@ -20,52 +20,8 @@ df = conn.query(f"SELECT * FROM {QUALIFIED_TABLE_NAME}")
 df_total = df[df['VARIABLE_NAME'].str.contains('Total Assets')]
 df_Insured = df[df['VARIABLE_NAME'].str.contains('Total deposits')]
 
-col11, col12, col13, col14 = st.columns([0.25, 0.25, 0.25, 0.25])
 
-# with col11:
-#     state_name_options = np.sort(df_total['STATE_ABBREVIATION'].unique())
-#     state_name = st.selectbox('SELECT STATE CODE', state_name_options)
-#     filtered_df_state = df_total[df_total['STATE_ABBREVIATION'] == state_name]
-
-#     state_name_options_Insured = np.sort(df_Insured['STATE_ABBREVIATION'].unique())
-#     filtered_df_state_Insured = df_Insured[df_Insured['STATE_ABBREVIATION'] == state_name]
-
-#     # st.dataframe(filtered_df_state_Insured)
-
-
-# # ENTITY_NAME을 기준으로 선택할 수 있는 selectbox 생성
-# with col12:
-#     city_name_options = np.sort(filtered_df_state['CITY'].unique())
-#     city_name = st.selectbox('SELECT CITY', city_name_options)
-#     filtered_df_city = filtered_df_state[filtered_df_state['CITY'] == city_name]
-
-#     city_name_options_Insured = np.sort(filtered_df_state_Insured['CITY'].unique())
-#     filtered_df_city_Insured = filtered_df_state_Insured[filtered_df_state_Insured['CITY'] == city_name]
-
-#     # st.dataframe(filtered_df_state_Insured)
-
-
-# with col13:
-#     entity_name_options = np.sort(filtered_df_city['ENTITY_NAME'].unique())
-#     entity_name = st.selectbox('SELECT BANK', entity_name_options)
-#     filtered_df = filtered_df_city[filtered_df_city['ENTITY_NAME'] == entity_name]
-
-#     entity_name_options_Insured = np.sort(filtered_df_city_Insured['ENTITY_NAME'].unique())
-#     filtered_df_Insured = filtered_df_city_Insured[filtered_df_city_Insured['ENTITY_NAME'] == entity_name]
-
-#     # st.dataframe(filtered_df_Insured)
-
-# with col14:
-#     # unique()로 얻은 연도를 np.sort()를 사용하여 정렬합니다.
-#     year_options = np.sort(filtered_df_city['YEAR'].unique())
-#     year_name = st.selectbox('SELECT YEAR', year_options)
-#     filtered_year_df = filtered_df_city[filtered_df_city['YEAR'] == year_name]
-
-#     year_options_Insured = np.sort(filtered_df_city_Insured['YEAR'].unique())
-#     filtered_year_df_Insured = filtered_df_city_Insured[filtered_df_city_Insured['YEAR'] == year_name]
-
-
-
+### 사이드바 ###
 state_name_options = np.sort(df_total['STATE_ABBREVIATION'].unique())
 state_name = st.sidebar.selectbox('SELECT STATE CODE', state_name_options)
 filtered_df_state = df_total[df_total['STATE_ABBREVIATION'] == state_name]
@@ -93,6 +49,19 @@ filtered_year_df = filtered_df_city[filtered_df_city['YEAR'] == year_name]
 
 year_options_Insured = np.sort(filtered_df_city_Insured['YEAR'].unique())
 filtered_year_df_Insured = filtered_df_city_Insured[filtered_df_city_Insured['YEAR'] == year_name]
+
+
+
+def calculate_percentage_change(current_value, previous_value):
+    if previous_value == 0:
+        return "최초년도 입니다"
+    percentage_change = ((current_value - previous_value) / previous_value) * 100
+    return f"작년대비  {percentage_change:.2f}%"
+
+col11, col12, col13, col14 = st.columns(4)
+
+
+col11.metric("총 자산", f'$ {123}', f'{calculate_percentage_change(3, 4)}') 
 
 
 st.divider()
