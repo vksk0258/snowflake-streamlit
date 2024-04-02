@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
 import plotly.express as px
+from prompts import asset_desc, deposits_desc, loan_desc
 
 st.set_page_config(page_title = "GA Dashboard", 
     page_icon = "🎲", 
@@ -24,6 +25,10 @@ df_loan = df[df['VARIABLE_NAME'].str.contains('Loans')]
 
 
 ### 사이드바 ###
+st.sidebar.title("USA FINANCE DASHBOARD📉")
+
+st.sidebar.divider()
+
 state_name_options = np.sort(df_total['STATE_ABBREVIATION'].unique())
 state_name = st.sidebar.selectbox('SELECT STATE CODE', state_name_options)
 filtered_df_state = df_total[df_total['STATE_ABBREVIATION'] == state_name]
@@ -77,7 +82,7 @@ try:
 except:
     previous_value = 0
 
-col11.metric("총 자산(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}') 
+col11.metric("총 자산(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}',help=asset_desc) 
 
 
 #deposit 전년도 대비 비교
@@ -87,7 +92,7 @@ try:
 except:
     previous_value = 0
 
-col12.metric("총 예금(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}') 
+col12.metric("총 예금(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}',help=deposits_desc) 
 
 current_value = int(df_loan.loc[(df_loan['STATE_ABBREVIATION'] == state_name) & (df_loan['CITY'] == city_name) & (df_loan['YEAR'] == year_name) &(df_loan['ENTITY_NAME']==entity_name), 'VALUE'])
 
@@ -96,11 +101,11 @@ try:
 except:
     previous_value = 0
 
-col13.metric("총 대출금(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}') 
+col13.metric("총 대출금(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}',help=loan_desc) 
 
 st.divider()
 
-col21, col22 = st.columns([0.6, 0.4])
+col21, col22 = st.columns([0.9, 0.1])
 
 timeline_chart = alt.Chart( 
     filtered_df
@@ -128,6 +133,7 @@ timeline_chart = alt.Chart(
 col21.subheader(entity_name+" 연도별 총 자산 추이", divider='green')
 col21.altair_chart(timeline_chart, use_container_width=True)
 
+col31,exp1, col32 ,exp2 = st.columns([0.4,0.1,0.4,0.1])
 
 color_scale = alt.Scale(scheme='greens', reverse=True)
 pie_chart = (
@@ -141,69 +147,91 @@ pie_chart = (
     width=300,
     height=300
 )
-col22.subheader(str(year_name)+"년도 "+city_name+" 자산 비율", divider='green')
-col22.altair_chart(pie_chart, use_container_width=True)
+col31.subheader(str(year_name)+"년도 "+city_name+" 자산 비율", divider='green')
+col31.altair_chart(pie_chart, use_container_width=True)
 
-
-# 기존 파이 차트 생성 코드
-# color_scale = alt.Scale(scheme='greens', reverse=True)
-# pie_chart = alt.Chart(filtered_year_df).mark_arc().encode(
-#     theta=alt.Theta('VALUE:Q'),
-#     color=alt.Color('ENTITY_NAME:N', scale=color_scale, sort=["VALUE"])
-# ).properties(
-#     width=300,
-#     height=300,
-#     title=str(year_name)+"년도 "+city_name+"의 은행 자산 비율"
-# )
-
-# # 텍스트 레이어 추가
-# text = pie_chart.mark_text(radiusOffset=10, align='center', baseline='middle').encode(
-#     text=alt.Text('VALUE:Q'),  # 여기서 'Q'는 양적 데이터를 의미
-#     theta=alt.Theta('VALUE:Q')
-# )
-
-# # 파이 차트와 텍스트 레이어 결합
-# final_chart = pie_chart + text
-
-# # 스트림릿에 차트 표시 (스트림릿을 사용하는 경우)
-
-# pie_chart = alt.Chart(filtered_year_df).mark_arc(innerRadius=0, outerRadius=100).encode(
-#     theta=alt.Theta(field='VALUE', type='quantitative', stack=True),  # 각도를 값으로 설정
-#     color=alt.Color('ENTITY_NAME:N', scale=color_scale, sort=["VALUE"]),
-# ).properties(
-#     width=300,
-#     height=300,
-#     title=str(year_name)+"년도 "+city_name+"의 은행 자산 비율"
-# )
-
-# # 텍스트 레이어 추가 - 각 파이 조각 위에 값 표시
-# text_layer = pie_chart.mark_text(radius=80,  # 텍스트 위치 조정 (원의 중심에서 50% 더 떨어진 위치)
-#                                  align='center',
-#                                  baseline='middle',
-#                                  angle=0).encode(
-#     text='VALUE:Q',  # 표시할 텍스트 (값)
-#     color=alt.value('blue'),
-#     theta=alt.Theta(field='VALUE', type='quantitative', stack=True)  # 텍스트의 각도 조정
-# )
-
-# # 파이 차트와 텍스트 레이어 결합
-# final_chart = pie_chart + text_layer
-# col22.altair_chart(final_chart, use_container_width=True)
-
-col31, col32 = st.columns([0.4, 0.6])
 
 color_scale = alt.Scale(scheme='greens')
 chart_top10 = (
-    alt.Chart(filtered_year_df_deposits.sort_values(by='VALUE', ascending=False).head(5))
+    alt.Chart(filtered_year_df_deposits.sort_values(by='VALUE', ascending=False).head(10))
     .mark_bar()
     .encode(
         x=alt.X("VALUE", title="Deposit"),
         y=alt.Y("ENTITY_NAME", title="").sort('-x'),
         color=alt.Color("VALUE", scale=color_scale, legend=None),
     )
-    .properties(height=240)
+    .properties(height=300)
 )
 
-col31.subheader(city_name+" 예금 자산 순위", divider='green')
-col31.altair_chart(chart_top10, theme="streamlit", use_container_width=True)
+col32.subheader(city_name+" 예금 자산 순위", divider='green')
+col32.altair_chart(chart_top10, theme="streamlit", use_container_width=True)
 
+##### 맵생성
+def make_heatmap(input_df, input_y, input_x, input_color, input_color_theme):
+    heatmap = alt.Chart(input_df).mark_rect().encode(
+            y=alt.Y(f'{input_y}:O', axis=alt.Axis(title="Year", titleFontSize=18, titlePadding=15, titleFontWeight=900, labelAngle=0)),
+            x=alt.X(f'{input_x}:O', axis=alt.Axis(title="", titleFontSize=18, titlePadding=15, titleFontWeight=900)),
+            color=alt.Color(f'max({input_color}):Q',
+                             legend=None,
+                             scale=alt.Scale(scheme=input_color_theme)),
+            stroke=alt.value('black'),
+            strokeWidth=alt.value(0.25),
+        ).properties(width=900
+        ).configure_axis(
+        labelFontSize=12,
+        titleFontSize=12
+        ) 
+    # height=300
+    return heatmap
+
+# Choropleth map
+def make_choropleth(input_df, input_id, input_column, input_color_theme):
+    choropleth = px.choropleth(input_df, locations=input_id, color=input_column, locationmode="USA-states",
+                               color_continuous_scale=input_color_theme,
+                               range_color=(0, max(df_selected_year.population)),
+                               scope="usa",
+                               labels={'population':'Population'}
+                              )
+    choropleth.update_layout(
+        # template='plotly_white',
+        plot_bgcolor='rgba(0, 0, 0, 0)',
+        paper_bgcolor='rgba(0, 0, 0, 0)',
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=350
+    )
+    return choropleth
+
+df_reshaped = pd.read_csv('data/us-population-2010-2019-reshaped.csv')
+df_selected_year = df_reshaped[df_reshaped.year == 2014]
+df_selected_year_sorted = df_selected_year.sort_values(by="population", ascending=False)
+
+
+col41, col42, ex1 = st.columns([0.6, 0.4, 0.1])
+
+with col41:
+    st.subheader("USA 인구밀집도", divider='green')
+    choropleth = make_choropleth(df_selected_year, 'states_code', 'population', 'greens')
+    st.plotly_chart(choropleth, use_container_width=True)
+    
+    heatmap = make_heatmap(df_reshaped, 'year', 'states', 'population', 'greens')
+    st.altair_chart(heatmap, use_container_width=True)
+
+with col42:
+
+    st.subheader("인구수 테이블", divider='green')
+    choropleth = make_choropleth(df_selected_year, 'states_code', 'population', 'greens')
+    st.dataframe(df_selected_year_sorted,
+                    column_order=("states", "population"),
+                    hide_index=True,
+                    width=None,
+                    column_config={
+                    "states": st.column_config.TextColumn(
+                        "States",
+                    ),
+                    "population": st.column_config.ProgressColumn(
+                        "Population",
+                        format="%f",
+                        min_value=0,
+                        max_value=max(df_selected_year_sorted.population),
+                        )}
+                    )

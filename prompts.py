@@ -90,6 +90,14 @@ def get_system_prompt():
     )
     return GEN_SQL.format(context=table_context)
 
+asset_desc='''현금, 대출, 증권, 은행 건물 및 기타 자산을 포함하여 기관이 소유한 모든 자산의 합계입니다. 이 총액에는 부외 계정이 포함되지 않습니다.'''
+deposits_desc='''요구불예금, 단기금융예금, 기타저축성예금, 정기예금, 외국국예금 등을 포함한 모든 예금의 합계입니다.'''
+loan_desc='''은행에서 발행했든 매입했든 상관없이 주로 부동산을 담보로 한 대출입니다.
+부동산 담보 대출은 처음부터 신용 연장의 중심이 되는 부동산에 대한 유치권에 의해 전부 또는 실질적으로 담보된 대출입니다. 부동산에 대한 유치권이나 유치권 없이 동일한 금액 또는 유리한 조건으로 신용을 연장받았습니다.
+ 
+부동산에 대한 유치권에 의해 전체적으로 또는 실질적으로 담보가 있는 것으로 간주되려면, 부동산 담보 발생 시점의 추정 가치(다른 사람이 보유한 추가 선순위 유치권을 공제한 후)가 대출 원금의 50%보다 커야 합니다.'''
+
+
 # do `streamlit run prompts.py` to view the initial system prompt in a Streamlit app
 if __name__ == "__main__":
     st.header("System prompt for Frosty")
