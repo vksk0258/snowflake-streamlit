@@ -29,43 +29,41 @@ st.sidebar.title("USA FINANCE DASHBOARD📉")
 
 st.sidebar.divider()
 
-state_name_options = np.sort(df_total['STATE_ABBREVIATION'].unique())
-state_name = st.sidebar.selectbox('SELECT STATE CODE', state_name_options)
-filtered_df_state = df_total[df_total['STATE_ABBREVIATION'] == state_name]
+#### SELECT STATE CODE
+state_code_list = np.sort(df_total['STATE_ABBREVIATION'].unique())
+state_code = st.sidebar.selectbox('SELECT STATE CODE', state_code_list)
+filtered_state_code = df_total[df_total['STATE_ABBREVIATION'] == state_code]
 
-state_name_options_Insured = np.sort(df_deposits['STATE_ABBREVIATION'].unique())
-filtered_df_state_Insured = df_deposits[df_deposits['STATE_ABBREVIATION'] == state_name]
-#####
+state_code_list_insured = np.sort(df_deposits['STATE_ABBREVIATION'].unique())
+filtered_state_code_insured = df_deposits[df_deposits['STATE_ABBREVIATION'] == state_code]
 
-city_name_options = np.sort(filtered_df_state['CITY'].unique())
-city_name = st.sidebar.selectbox('SELECT CITY', city_name_options)
-filtered_df_city = filtered_df_state[filtered_df_state['CITY'] == city_name]
+##### SELECT CITY
+city_name_list = np.sort(filtered_state_code['CITY'].unique())
+city_name = st.sidebar.selectbox('SELECT CITY', city_name_list)
+filtered_city_name = filtered_state_code[filtered_state_code['CITY'] == city_name]
 
-city_name_options_Insured = np.sort(filtered_df_state_Insured['CITY'].unique())
-filtered_df_city_Insured = filtered_df_state_Insured[filtered_df_state_Insured['CITY'] == city_name]
+city_name_list_insured = np.sort(filtered_state_code_insured['CITY'].unique())
+filtered_city_name_insured = filtered_state_code_insured[filtered_state_code_insured['CITY'] == city_name]
 
-#####
+##### SELECT BANK
+bank_name_list = np.sort(filtered_city_name['ENTITY_NAME'].unique())
+bank_name = st.sidebar.selectbox('SELECT BANK', bank_name_list)
+filtered_bank_name = filtered_city_name[filtered_city_name['ENTITY_NAME'] == bank_name]
 
-entity_name_options = np.sort(filtered_df_city['ENTITY_NAME'].unique())
-entity_name = st.sidebar.selectbox('SELECT BANK', entity_name_options)
-filtered_df = filtered_df_city[filtered_df_city['ENTITY_NAME'] == entity_name]
+bank_name_list_insured = np.sort(filtered_city_name_insured['ENTITY_NAME'].unique())
+filtered_bank_name_insured = filtered_city_name_insured[filtered_city_name_insured['ENTITY_NAME'] == bank_name]
 
-entity_name_options_Insured = np.sort(filtered_df_city_Insured['ENTITY_NAME'].unique())
-filtered_df_deposits = filtered_df_city_Insured[filtered_df_city_Insured['ENTITY_NAME'] == entity_name]
+#### SELECT YEAR
+year_list = np.sort(filtered_bank_name['YEAR'].unique())
+year = st.sidebar.selectbox('SELECT YEAR', year_list)
+filtered_year = filtered_bank_name[filtered_bank_name['YEAR'] == year]
+
+year_list_insured = np.sort(filtered_city_name_insured['YEAR'].unique())
+filtered_year_list_insured = filtered_city_name_insured[filtered_city_name_insured['YEAR'] == year]
 
 ####
-
-year_options = np.sort(filtered_df['YEAR'].unique())
-year_name = st.sidebar.selectbox('SELECT YEAR', year_options)
-filtered_year_df = filtered_df[filtered_df['YEAR'] == year_name]
-
-year_options_Insured = np.sort(filtered_df_city_Insured['YEAR'].unique())
-filtered_year_df_deposits = filtered_df_city_Insured[filtered_df_city_Insured['YEAR'] == year_name]
-
-####
-
-pre_filtered_year_df = filtered_df_city[filtered_df_city['YEAR'] == year_name-1]
-pre_filtered_year_df_deposits = filtered_df_city_Insured[filtered_df_city_Insured['YEAR'] == year_name-1]
+pre_filtered_year_list = filtered_city_name[filtered_city_name['YEAR'] == year-1]
+pre_filtered_year_list_insured = filtered_city_name_insured[filtered_city_name_insured['YEAR'] == year-1]
 
 def calculate_percentage_change(current_value, previous_value):
     if previous_value == 0:
@@ -76,9 +74,9 @@ def calculate_percentage_change(current_value, previous_value):
 col11, col12, col13 = st.columns(3)
 
 #total asset 전년대 대비 비교
-current_value = int(df_total.loc[(df_total['STATE_ABBREVIATION'] == state_name) & (df_total['CITY'] == city_name) & (df_total['YEAR'] == year_name) &(df_total['ENTITY_NAME']==entity_name), 'VALUE'])
+current_value = int(df_total.loc[(df_total['STATE_ABBREVIATION'] == state_code) & (df_total['CITY'] == city_name) & (df_total['YEAR'] == year) &(df_total['ENTITY_NAME']==bank_name), 'VALUE'])
 try:
-    previous_value = int(df_total.loc[(df_total['STATE_ABBREVIATION'] == state_name) & (df_total['CITY'] == city_name) & (df_total['YEAR'] == year_name-1) &(df_total['ENTITY_NAME']==entity_name), 'VALUE'])
+    previous_value = int(df_total.loc[(df_total['STATE_ABBREVIATION'] == state_code) & (df_total['CITY'] == city_name) & (df_total['YEAR'] == year-1) &(df_total['ENTITY_NAME']==bank_name), 'VALUE'])
 except:
     previous_value = 0
 
@@ -86,18 +84,18 @@ col11.metric("총 자산(작년대비 등락률)", f'$ {current_value:,}', f'{ca
 
 
 #deposit 전년도 대비 비교
-current_value = int(filtered_year_df_deposits[filtered_year_df_deposits['ENTITY_NAME']==entity_name]['VALUE'].iloc[0])
+current_value = int(filtered_year_list_insured[filtered_year_list_insured['ENTITY_NAME']==bank_name]['VALUE'].iloc[0])
 try:
-    previous_value = int(pre_filtered_year_df_deposits[pre_filtered_year_df_deposits['ENTITY_NAME']==entity_name]['VALUE'].iloc[0])
+    previous_value = int(pre_filtered_year_list_insured[pre_filtered_year_list_insured['ENTITY_NAME']==bank_name]['VALUE'].iloc[0])
 except:
     previous_value = 0
 
 col12.metric("총 예금(작년대비 등락률)", f'$ {current_value:,}', f'{calculate_percentage_change(current_value, previous_value)}',help=deposits_desc) 
 
-current_value = int(df_loan.loc[(df_loan['STATE_ABBREVIATION'] == state_name) & (df_loan['CITY'] == city_name) & (df_loan['YEAR'] == year_name) &(df_loan['ENTITY_NAME']==entity_name), 'VALUE'])
+current_value = int(df_loan.loc[(df_loan['STATE_ABBREVIATION'] == state_code) & (df_loan['CITY'] == city_name) & (df_loan['YEAR'] == year) &(df_loan['ENTITY_NAME']==bank_name), 'VALUE'])
 
 try:
-    previous_value = int(df_loan.loc[(df_loan['STATE_ABBREVIATION'] == state_name) & (df_loan['CITY'] == city_name) & (df_loan['YEAR'] == year_name-1) &(df_loan['ENTITY_NAME']==entity_name), 'VALUE'])
+    previous_value = int(df_loan.loc[(df_loan['STATE_ABBREVIATION'] == state_code) & (df_loan['CITY'] == city_name) & (df_loan['YEAR'] == year-1) &(df_loan['ENTITY_NAME']==bank_name), 'VALUE'])
 except:
     previous_value = 0
 
@@ -108,7 +106,7 @@ st.divider()
 col21, col22 = st.columns([0.9, 0.1])
 
 timeline_chart = alt.Chart( 
-    filtered_df
+    filtered_bank_name
     ).mark_area( 
         line={'color':'darkgreen'},
         interpolate='basis',
@@ -128,16 +126,16 @@ timeline_chart = alt.Chart(
         y=alt.Y('VALUE', title='총 자산')
     ).properties(
         height=300,
-        title= entity_name+" Annual Total Asset Graph"
+        title= bank_name+" Annual Total Asset Graph"
     ).interactive()
-col21.subheader(entity_name+" 연도별 총 자산 추이", divider='green')
+col21.subheader(bank_name+" 연도별 총 자산 추이", divider='green')
 col21.altair_chart(timeline_chart, use_container_width=True)
 
 col31,exp1, col32 ,exp2 = st.columns([0.4,0.1,0.4,0.1])
 
 color_scale = alt.Scale(scheme='greens', reverse=True)
 pie_chart = (
-    alt.Chart(df_total[(df_total['STATE_ABBREVIATION'] == state_name) & (df_total['CITY'] == city_name) & (df_total['YEAR'] == year_name)])
+    alt.Chart(df_total[(df_total['STATE_ABBREVIATION'] == state_code) & (df_total['CITY'] == city_name) & (df_total['YEAR'] == year)])
     .mark_arc()
     .encode(
         theta=alt.Theta('VALUE'),
@@ -147,16 +145,16 @@ pie_chart = (
     width=300,
     height=300
 )
-col31.subheader(str(year_name)+"년도 "+city_name+" 자산 비율", divider='green')
-col31.altair_chart(pie_chart, use_container_width=True)
 
+col31.subheader(str(year)+"년도 "+city_name+" 자산 비율", divider='green')
+col31.altair_chart(pie_chart, use_container_width=True)
 
 color_scale = alt.Scale(scheme='greens')
 chart_top10 = (
-    alt.Chart(filtered_year_df_deposits.sort_values(by='VALUE', ascending=False).head(10))
+    alt.Chart(filtered_year_list_insured.sort_values(by='VALUE', ascending=False).head(10))
     .mark_bar()
     .encode(
-        x=alt.X("VALUE", title="Deposit"),
+        x=alt.X("VALUE", title="예금"),
         y=alt.Y("ENTITY_NAME", title="").sort('-x'),
         color=alt.Color("VALUE", scale=color_scale, legend=None),
     )
