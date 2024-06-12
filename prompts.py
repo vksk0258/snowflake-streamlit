@@ -4,6 +4,8 @@ SCHEMA_PATH = st.secrets.get("SCHEMA_PATH", "FROSTY_SAMPLE.CYBERSYN_FINANCIAL")
 print(SCHEMA_PATH)
 QUALIFIED_TABLE_NAME = f"{SCHEMA_PATH}.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES"
 TABLE_DESCRIPTION = """
+This table has various metrics for financial entities (also referred to as banks) since 1983.
+The user may describe the entities interchangeably as banks, financial institutions, or financial entities.
 """
 # This query is optional if running Frosty on your own table, especially a wide table.
 # Since this is a deep table, it's useful to tell Frosty what variables are available.
